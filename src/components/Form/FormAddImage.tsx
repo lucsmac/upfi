@@ -8,6 +8,12 @@ import { api } from '../../services/api';
 import { FileInput } from '../Input/FileInput';
 import { TextInput } from '../Input/TextInput';
 
+interface FormValues {
+  image: FileList;
+  title: string;
+  description: string;
+}
+
 interface FormAddImageProps {
   closeModal: () => void;
 }
@@ -19,30 +25,52 @@ export function FormAddImage({ closeModal }: FormAddImageProps): JSX.Element {
 
   const formValidations = {
     image: {
-      required: true,
-      validate: value => value[0].size <= 10_000_000,
+      required: 'Arquivo obrigatório',
+      validate: {
+        lessThan10MB: fileList =>
+          fileList[0].size < 10485760 || 'O arquivo deve ser menor que 10MB',
+        acceptedFormats: fileList =>
+          /(?:([^:/?#]+):)?(?:([^/?#]*))?([^?#](?:jpeg|gif|png))(?:\?([^#]*))?(?:#(.*))?/g.test(
+            fileList[0].type
+          ) || 'Somente são aceitos arquivos PNG, JPEG e GIF',
+      },
     },
     title: {
-      required: true,
-      minLength: 2,
-      maxLength: 20,
+      required: 'Título obrigatório',
+      minLength: {
+        value: 2,
+        message: 'Mínimo de 2 caracteres',
+      },
+      maxLength: {
+        value: 20,
+        message: 'Máximo de 20 caracteres',
+      },
     },
     description: {
-      required: true,
-      maxLength: 65,
+      required: 'Descrição obrigatória',
+      maxLength: {
+        value: 65,
+        message: 'Máximo de 65 caracteres',
+      },
     },
   };
 
   const queryClient = useQueryClient();
-  const mutation = useMutation(formData => api.post('/images', formData), {
-    onSuccess: () => queryClient.invalidateQueries('images'),
-  });
+  const mutation = useMutation(
+    async formData => {
+      const data = await api.post('/images', formData);
+      return data;
+    },
+    {
+      onSuccess: () => queryClient.invalidateQueries('images'),
+    }
+  );
 
   const { register, handleSubmit, reset, formState, setError, trigger } =
     useForm();
   const { errors } = formState;
 
-  const onSubmit = async (data: Record<string, unknown>): Promise<void> => {
+  const onSubmit = async (data: FormValues): Promise<void> => {
     try {
       if (!imageUrl) {
         toast({
@@ -55,7 +83,7 @@ export function FormAddImage({ closeModal }: FormAddImageProps): JSX.Element {
         });
       }
 
-      const response = await mutation.mutateAsync({ ...data, url: imageUrl });
+      const response = await mutation.mutateAsync(data);
 
       if (response.status === 201) {
         toast({
@@ -76,6 +104,8 @@ export function FormAddImage({ closeModal }: FormAddImageProps): JSX.Element {
       });
     } finally {
       reset();
+      setImageUrl('');
+      setLocalImageUrl('');
       closeModal();
     }
   };

@@ -26,6 +26,7 @@ export function ModalViewImage({
         <ModalBody p={2}>
           <Image src={imgUrl} />
         </ModalBody>
+
         <ModalFooter justifyContent="start">
           <Link href={imgUrl} target="_blank">
             Abrir original

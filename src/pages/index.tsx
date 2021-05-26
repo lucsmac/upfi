@@ -2,13 +2,13 @@ import { Button, Box } from '@chakra-ui/react';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { useMemo } from 'react';
 import { useInfiniteQuery } from 'react-query';
-
 import Head from 'next/head';
-import { Header } from '../components/Header';
+
 import { CardList } from '../components/CardList';
-import { api } from '../services/api';
-import { Loading } from '../components/Loading';
 import { Error } from '../components/Error';
+import { Header } from '../components/Header';
+import { Loading } from '../components/Loading';
+import { api } from '../services/api';
 
 interface Card {
   title: string;
@@ -24,7 +24,9 @@ type IInfiniteQueryResponse = {
 };
 
 export default function Home(): JSX.Element {
-  const fetchProjects = async ({ pageParam = 0 }): Promise<unknown> => {
+  const getImages = async ({
+    pageParam = 0,
+  }): Promise<IInfiniteQueryResponse> => {
     const { data } = await api.get(`/images?after=${pageParam}`);
     return data;
   };
@@ -38,11 +40,9 @@ export default function Home(): JSX.Element {
     hasNextPage,
   } = useInfiniteQuery<unknown, unknown, IInfiniteQueryResponse>(
     'images',
-    fetchProjects,
+    getImages,
     {
-      getNextPageParam: (lastPage: { after: number }) => {
-        return lastPage.after;
-      },
+      getNextPageParam: (lastPage: { after: number }) => lastPage.after,
     }
   );
 
@@ -59,7 +59,9 @@ export default function Home(): JSX.Element {
     <>
       <Head>
         <title>UpFi</title>
+        <link rel="shortcut icon" href="logo.svg" />
       </Head>
+
       <Header />
 
       <Box maxW={1120} px={20} mx="auto" my={20}>
