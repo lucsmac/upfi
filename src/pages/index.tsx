@@ -27,7 +27,11 @@ export default function Home(): JSX.Element {
   const getImages = async ({
     pageParam = 0,
   }): Promise<IInfiniteQueryResponse> => {
-    const { data } = await api.get(`/images?after=${pageParam}`);
+    const { data } = await api.get('/images', {
+      params: {
+        after: pageParam,
+      },
+    });
     return data;
   };
 
