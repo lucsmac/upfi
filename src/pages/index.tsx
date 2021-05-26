@@ -25,7 +25,7 @@ type IInfiniteQueryResponse = {
 
 export default function Home(): JSX.Element {
   const getImages = async ({
-    pageParam = 0,
+    pageParam = null,
   }): Promise<IInfiniteQueryResponse> => {
     const { data } = await api.get('/images', {
       params: {
